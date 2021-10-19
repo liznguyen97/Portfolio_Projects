@@ -31,7 +31,7 @@ ORDER BY 1,2
 
 
 
--- Total Cases vs Total Deaths 
+-- 1) Total Cases vs Total Deaths 
 ---- Shows likelihood of dying if you contract Covid in your country (USA)
 SELECT location, date, total_cases, total_deaths, (total_deaths/total_cases)*100 as DeathPercentage
 FROM [Portfolio Project]..CovidDeaths
@@ -41,7 +41,7 @@ ORDER BY 1,2
 
 
 
--- Total Cases vs Population (USA)
+-- 2) Total Cases vs Population (USA)
 ---- Shows what percentage of the population infected by Covid
 SELECT location, date, total_cases, population, (total_cases/population)*100 as PercentPopulationInfected
 FROM [Portfolio Project]..CovidDeaths
@@ -51,7 +51,7 @@ ORDER BY 1,2
 
 
 
--- Countries with Highest Infection Rate compared to population
+-- 3) Countries with Highest Infection Rate compared to population
 SELECT location, population, MAX(total_cases) as HighestInfectionCount,
 	   MAX((total_cases)/population)*100 as PercentPopulationInfected
 FROM [Portfolio Project]..CovidDeaths
@@ -61,7 +61,7 @@ ORDER BY 4 desc
 
 
 
--- Population with Highest Death Count Per Population
+-- 4) Population with Highest Death Count Per Population
 ---- total_deaths column data type was a string 
 ---- Must convert into int with either a CAST or CONVERT function
 SELECT location, population, MAX(cast(total_deaths as int)) as TotalDeathCount
@@ -74,7 +74,7 @@ ORDER BY TotalDeathCount desc
 
 -- BREAKING THINGS DOWN BY CONTINENT
 
--- Showing contintents with the highest death count per population
+-- 5) Showing contintents with the highest death count per population
 SELECT continent, MAX(cast(total_deaths as int)) as TotalDeathCount
 FROM [Portfolio Project]..CovidDeaths
 WHERE continent IS NOT NULL
@@ -82,7 +82,7 @@ GROUP BY continent
 ORDER BY TotalDeathCount desc 
 
 
--- Global Numbers
+-- 6) Global Numbers
 ---- Percentage of people who contracted covid and died in the world
 SELECT SUM(new_cases) as total_cases, SUM(cast(new_deaths as int)) as total_deaths,
 	   SUM(cast(new_deaths as int))/SUM(New_Cases)*100 as DeathPercentage
@@ -92,7 +92,7 @@ ORDER BY 1,2
 
 
 
--- Total Population vs Vaccinations
+-- 7) Total Population vs Vaccinations
 -- Shows rolling count of population vaccinated
 SELECT dea.continent, dea.location, dea.date, dea.population, vac.new_vaccinations,
 	   SUM(CONVERT(int,vac.new_vaccinations)) OVER (Partition by dea.location ORDER BY dea.location, dea.date) as RollingPeopleVaccinated
@@ -105,9 +105,8 @@ ORDER BY 2,3
 
 
 
---Using CTE to perform Calculation on Partition By in previous query
+-- 8) Using CTE to perform Calculation on Partition By in previous query
 -- Shows Percentage of Population that has received at least one Covid Vaccine
--- ORDER BY clause cannot be used in CTE
 WITH PopvsVac (continent, location, date, population, new_vaccinations, RollingPeopleVaccinated)
 as
 (
@@ -125,7 +124,7 @@ From PopvsVac
 
 
 
--- Using TEMP TABLE to perform Calculation on Partition By in previous query
+-- 9) Using TEMP TABLE to perform Calculation on Partition By in previous query
 DROP TABLE if exists #PercentPopulationVacinnated
 CREATE TABLE #PercentPopulationVacinnated
 (
@@ -154,8 +153,7 @@ FROM #PercentPopulationVacinnated
 
 
 
--- Creating View to store data for later visualizations
--- ORDER By clause cannot work in VIEWS
+-- 10) Creating View to store data for later visualizations
 CREATE VIEW PercentPopulationVacinnated as
 SELECT dea.continent, dea.location, dea.date, dea.population,vac.new_vaccinations,
 	    SUM(CONVERT(int,new_vaccinations)) OVER (Partition by dea.location Order by
